@@ -1,0 +1,41 @@
+#!/usr/bin/python
+import os.path
+import sys
+import xml.etree.ElementTree as ET
+from termcolor import colored
+
+def searchFile(filename):
+    language = filename.split('/')[-1].split('.')[-2]
+    color_language = colored(language, 'blue', attrs=['bold'])
+    tree = ET.parse(filename)
+    root = tree.getroot()
+    xmlns, ignore, tag = root.tag[1:].partition("}")
+
+    def getChild(parent, tag):
+        return parent.find('{%s}%s' % (xmlns, tag))
+
+    file = getChild(root, 'file')
+    body = getChild(file, 'body')
+
+    for trans in body:
+        source = getChild(trans, 'source')
+        target = getChild(trans, 'target')
+        if search in source.text or (target.text and search in target.text):
+            color_source = source.text.replace(search, colored(search, 'red', attrs=['bold']))
+            color_target = target.text.replace(search, colored(search, 'red', attrs=['bold']))
+            print('{: <3} {: <60} {: <40}'.format(color_language, color_source, color_target))
+
+
+
+
+if not len(sys.argv) > 1:
+    exit()
+
+search = sys.argv[1]
+
+translation_directory = os.path.expanduser('~/dev/netgalley/translations/')
+files =  [f for f in os.listdir(translation_directory) if f.endswith('.xlf')]
+#files = ['messages.en.xlf']
+
+for file in files:
+    searchFile(translation_directory + file)
